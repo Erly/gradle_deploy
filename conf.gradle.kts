@@ -7,4 +7,4 @@ tasks.register<Copy>("replaceConf") {
     outputs.upToDateWhen { false }
 }
 
-tasks.named("build").get().dependsOn("replaceConf")
+tasks.named("processResources").get().dependsOn("replaceConf")
