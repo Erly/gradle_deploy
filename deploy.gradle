@@ -1,0 +1,117 @@
+import java.nio.file.Paths
+import java.text.SimpleDateFormat
+
+ssh.settings {
+    knownHosts = allowAnyHosts
+    pty = true
+}
+
+// If teamcity variable doesn't exist, it will use the variables defined in the gradle.properties
+//if (project.hasProperty('teamcity')) {
+//    sshHost = teamcity.SshHost
+//    sshUser = teamcity.SshUser
+//    sshKeyFile = teamcity.SshKeyFile
+//
+//    jarPath = teamcity.JarPath
+//    confPath = teamcity.ConfPath
+//    logPath = teamcity.LogPath
+//    deployFolder = teamcity.DeployFolder
+//}
+
+deployFolder = "${deployFolder}/${buildDate()}" //deploy + date
+
+remotes {
+    deploynode {
+        host = sshHost
+        user = sshUser
+        identity = file(sshKeyFile)
+        agent = sshAgent
+    }
+}
+
+tasks.register('createPaths') {
+    doLast {
+        ssh.run {
+            session(remotes.deploynode) {
+                execute "mkdir -p ${deployFolder}/bin"
+                execute "mkdir -p ${deployFolder}/conf"
+                execute "mkdir -p ${logPath}"
+                execute "mkdir -p ${getParentDir(jarPath)}"
+                execute "mkdir -p ${getParentDir(confPath)}"
+            }
+        }
+    }
+}
+
+tasks.register('getOwnership') {
+    dependsOn createPaths
+    doLast {
+        ssh.run {
+            session(remotes.deploynode) {
+                execute "chown ${sshUser} ${deployFolder}/bin"
+                execute "chown ${sshUser} ${deployFolder}/conf"
+                execute "chown ${sshUser} ${logPath}"
+            }
+        }
+    }
+}
+
+tasks.register('createSimLinks') {
+    dependsOn getOwnership
+    doLast {
+        ssh.run {
+            session(remotes.deploynode) {
+                execute "ln -fsn ${deployFolder}/bin ${jarPath} "
+                execute "ln -fsn ${deployFolder}/conf ${confPath}"
+            }
+        }
+    }
+}
+
+tasks.register('copyArtifacts') {
+    dependsOn createSimLinks, shadowJar, replaceDeployConf
+    doLast {
+        ssh.run {
+            session(remotes.deploynode) {
+                put from: "$projectDir/build/libs/*.jar", into: "${jarPath}"
+                put from: "$projectDir/build/resources/main/*.properties", into: "${confPath}"
+            }
+        }
+    }
+}
+
+tasks.register('deploy') {
+    dependsOn copyArtifacts
+    group = 'deployment'
+    description = "Deploys ${project.name}"
+    doLast {
+        ssh.run {
+            session(remotes.deploynode) {
+                execute stormLine
+            }
+        }
+    }
+}
+
+//tasks.register('sendMarkToGrafana', Exec) {
+//    commandLine '/bin/bash', '-c', 'curl --verbose http://' + "${influxDBHost}" + ':' + "${influxDBPort}" + '/write?db=' + "${influxDB}" + '\\&u=' + "${influxDBUser}" + '\\&p=' + "${influxDBPwd}" + ' --data "' + "${projectName}" + '.Deployment,Node=\\"' + "${releaseNumber}" + '\\" value=\\"' + "${sshHost}" + '\\""'
+//    standardOutput = new ByteArrayOutputStream()
+//    ext.output = {
+//        return standardOutput.toString()
+//    }
+//}
+
+
+
+// region auxiliary functions
+static String buildDate() {
+    def df = new SimpleDateFormat("yyyy-MM-dd")
+    df.setTimeZone(TimeZone.getTimeZone("UTC"))
+    return df.format(new Date())
+}
+
+static String getParentDir(String dir) {
+    def path = Paths.get(dir)
+    path.getParent().toString();
+}
+// endregion
