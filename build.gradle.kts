@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     kotlin("jvm") version "1.9.22"
     id("org.hidetake.ssh") version "2.11.2"
@@ -9,6 +11,7 @@ apply("deploy.gradle")
 
 group = "net.erlantz"
 version = "1.0-SNAPSHOT"
+var mainClassName = project.properties["mainClass"]
 
 repositories {
     mavenCentral()
@@ -16,6 +19,17 @@ repositories {
 
 dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
+}
+
+tasks.named<ShadowJar>("shadowJar") {
+    isZip64 = true
+    manifest {
+        attributes(mapOf(
+            "Implementation-Title" to "Gradle-Deploy",
+            "Implementation-Version" to project.version,
+            "Main-Class" to mainClassName
+        ))
+    }
 }
 
 tasks.test {

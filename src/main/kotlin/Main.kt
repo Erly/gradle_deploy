@@ -1,20 +1,32 @@
 package net.erlantz
 
+import java.io.File
+import java.io.FileInputStream
 import java.util.*
 
-fun main() {
-    val from = PropertiesReader.getProperty("From");
+fun main(args: Array<String>) {
+    val from = PropertiesReader(args.firstOrNull()).getProperty("From");
     println("Hello from $from!")
 }
 
-private const val CONFIG = "config.properties"
-
-object PropertiesReader {
+class PropertiesReader(propsFilePath: String?) {
     private val properties = Properties()
+    private val defaultConfigFile = "config.properties"
 
     init {
-        val file = this::class.java.classLoader.getResourceAsStream(CONFIG)
-        properties.load(file)
+        if (propsFilePath != null) {
+            val propertiesFile = File(propsFilePath)
+            if (!propertiesFile.exists()) {
+                println("Properties file not found.")
+            }
+
+            FileInputStream(propertiesFile).use { stream ->
+                properties.load(stream)
+            }
+        } else {
+            val file = this::class.java.classLoader.getResourceAsStream(defaultConfigFile)
+            properties.load(file)
+        }
     }
 
     fun getProperty(key: String): String = properties.getProperty(key)

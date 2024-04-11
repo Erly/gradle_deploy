@@ -25,7 +25,6 @@ remotes {
         host = sshHost
         user = sshUser
         identity = file(sshKeyFile)
-        agent = sshAgent
     }
 }
 
@@ -69,16 +68,18 @@ tasks.register('createSimLinks') {
 }
 
 tasks.register('copyArtifacts') {
-    dependsOn createSimLinks, shadowJar, replaceDeployConf
+    dependsOn createSimLinks, shadowJar
     doLast {
         ssh.run {
             session(remotes.deploynode) {
-                put from: "$projectDir/build/libs/*.jar", into: "${jarPath}"
-                put from: "$projectDir/build/resources/main/*.properties", into: "${confPath}"
+                put from: "$projectDir/build/libs/GradleDeploy-${version}-all.jar", into: "${jarPath}"
+                put from: "$projectDir/build/resources/main/config.properties", into: "${confPath}"
             }
         }
     }
 }
+
+//def deployCommand = "java -jar ${jarPath}/GradleDeploy-${version}-all.jar ${confPath}/config.properties"
 
 tasks.register('deploy') {
     dependsOn copyArtifacts
@@ -87,7 +88,7 @@ tasks.register('deploy') {
     doLast {
         ssh.run {
             session(remotes.deploynode) {
-                execute stormLine
+                execute "java -jar ${jarPath}/GradleDeploy-${version}-all.jar ${confPath}/config.properties"
             }
         }
     }
