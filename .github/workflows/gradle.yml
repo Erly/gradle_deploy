@@ -43,7 +43,7 @@ jobs:
         echo "${{ secrets.DEPLOYMENTKEY }}" >> ./id_ed25519.pub
 
     - name: Build with Gradle Wrapper
-      run: ./gradlew deploy -DsshHost=vars.SSHHOST -DsshUser=vars.SSHUSER -DsshKeyFile=./id_ed25519.pub -DsshAgent=vars.SSHAGENT -DjarPath=vars.JARPATH -DconfPath=vars.CONFPATH -DlogPath=vars.LOGPATH -DdeployFolder=vars.DEPLOYFOLDER -DdeploymentServer=vars.DEPLOYMENTSERVER
+      run: ./gradlew deploy -PsshHost=vars.SSHHOST -PsshUser=vars.SSHUSER -PsshKeyFile=./id_ed25519.pub -PsshAgent=vars.SSHAGENT -PjarPath=vars.JARPATH -PconfPath=vars.CONFPATH -PlogPath=vars.LOGPATH -PdeployFolder=vars.DEPLOYFOLDER -PdeploymentServer=vars.DEPLOYMENTSERVER
 
   dependency-submission:
 
