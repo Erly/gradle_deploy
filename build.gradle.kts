@@ -11,7 +11,6 @@ apply("deploy.gradle")
 
 group = "net.erlantz"
 version = "1.0-SNAPSHOT"
-var mainClassName = project.properties["mainClass"]
 
 repositories {
     mavenCentral()
@@ -27,7 +26,7 @@ tasks.named<ShadowJar>("shadowJar") {
         attributes(mapOf(
             "Implementation-Title" to "Gradle-Deploy",
             "Implementation-Version" to project.version,
-            "Main-Class" to mainClassName
+            "Main-Class" to "net.erlantz.MainKt"
         ))
     }
 }
