@@ -1,0 +1,38 @@
+# Gradle
+# Build your Java project and run tests with Gradle using a Gradle wrapper script.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+- group: GradleDeploy
+
+steps:
+- task: DeleteFiles@1
+  inputs:
+    SourceFolder: 
+    Contents: 'gradle.properties'
+  
+- task: DownloadSecureFile@1
+  name: id_ed25519
+  displayName: 'Download SSH secret key'
+  inputs:
+    secureFile: 'id_ed25519'
+
+- task: Gradle@3
+  inputs:
+    workingDirectory: ''
+    gradleWrapperFile: 'gradlew'
+    gradleOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.17'
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: true
+    testResultsFiles: '**/TEST-*.xml'
+    tasks: 'deploy'
+    options: '-PsshHost=$(sshHost) -PsshUser=$(sshUser) -PsshKeyFile=./id_ed25519 -PsshAgent=$(sshAgent) -PjarPath=$(jarPath)) -PconfPath=$(confPath) -PlogPath=$(logPath) -PdeployFolder=$(deployFolder) -PdeploymentServer=$(deploymentServer)'
