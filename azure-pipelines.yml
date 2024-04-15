@@ -35,4 +35,4 @@ steps:
     publishJUnitResults: true
     testResultsFiles: '**/TEST-*.xml'
     tasks: 'deploy'
-    options: '-PsshHost=$(sshHost) -PsshUser=$(sshUser) -PsshKeyFile=./id_ed25519 -PsshAgent=$(sshAgent) -PjarPath=$(jarPath)) -PconfPath=$(confPath) -PlogPath=$(logPath) -PdeployFolder=$(deployFolder) -PdeploymentServer=$(deploymentServer)'
+    options: '-PsshHost=$(sshHost) -PsshUser=$(sshUser) -PsshKeyFile=$(id_ed25519.secureFilePath) -PsshAgent=$(sshAgent) -PjarPath=$(jarPath)) -PconfPath=$(confPath) -PlogPath=$(logPath) -PdeployFolder=$(deployFolder) -PdeploymentServer=$(deploymentServer)'
